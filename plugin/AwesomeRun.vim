@@ -13,13 +13,36 @@ EOF
 endfunction
 
 function! AwesomeRun_Cmdline(cmdline)
-echo a:cmdline
+redir! > output.txt 
 python3 << EOF
 import vim
+cmd = vim.eval("a:cmdline")
+cmd = "silent execute('!" + cmd + "')"
+vim.command(cmd)
+EOF
+redir END
+let l:sympol = 0 
+python3 << EOF
+import vim
+import os
 vim.command("call AwesomeRun_QuickfixOpen()")
 QuickFix = vim.current.buffer
 vim.command("set modifiable")
-vim.command("set nomodifiable")
+QuickFix.append("[--AwesomeRun--]")
+del QuickFix[0]
+flag = 0
+with open("output.txt") as read_file:
+   for line in read_file:
+        line = line.rstrip()
+        if line == '':
+            continue
+        if flag == 0:
+            QuickFix.append('cmd: ' + line[2:] )
+            flag = 1
+            QuickFix.append('res:')
+            continue
+        QuickFix.append('-- ' + line)
+QuickFix.append("[--Finished--]")
 EOF
 endfunction
 
